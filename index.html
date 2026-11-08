@@ -25,6 +25,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-
 .card .txt{font-family:Georgia,"Times New Roman",serif;line-height:1.38;margin:0;text-shadow:0 1px 8px rgba(0,0,0,.2);font-size:clamp(20px,5.6vw,27px)}
 .card .txt.m{font-size:clamp(18px,5vw,23px)}
 .card .txt.l{font-size:clamp(16px,4.4vw,20px)}
+.card .txt.xl{font-size:clamp(14.5px,4vw,17.5px);line-height:1.4}
 .card .ref{margin-top:18px;font-weight:700;font-size:17px;opacity:.95}
 .rail{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 110px);display:flex;flex-direction:column;gap:20px;align-items:center}
 .rail button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700}
@@ -115,7 +116,7 @@ function next(n){
   return out;
 }
 function emojiOf(h,th){var m=h.match(/[☀-➿]|[\ud83c-\ud83e][\udc00-\udfff]/g);return m?m[0]:THEMES[th].e}
-function sizeCls(t){return t.length>230?"l":(t.length>120?"m":"")}
+function sizeCls(t){return t.length>330?"xl":t.length>230?"l":(t.length>120?"m":"")}
 function card(x){
   var d=document.createElement("section");d.className="card";d.dataset.i=x.i;
   var g=THEMES[x.th].g,ang=120+(x.i*37)%90;
