@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2a1b4d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bibel-Scroll">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Bibel-Scroll</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#1a1033;overflow:hidden;overscroll-behavior:none;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fff;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
+#feed{position:fixed;inset:0;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#feed::-webkit-scrollbar{display:none}
+.card{position:relative;height:100vh;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;touch-action:pan-y;display:flex;flex-direction:column;justify-content:center;padding:calc(env(safe-area-inset-top) + 92px) 76px calc(env(safe-area-inset-bottom) + 96px) 28px}
+.card .bgemoji{position:absolute;right:-30px;top:50%;font-size:300px;line-height:1;opacity:.13;transform:translateY(-50%) rotate(-12deg);pointer-events:none}
+.card .head{font-weight:800;font-size:clamp(22px,6.4vw,32px);line-height:1.15;margin:0 0 18px;letter-spacing:-.01em;text-shadow:0 2px 12px rgba(0,0,0,.25)}
+.card .tag{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.22);padding:5px 11px;border-radius:99px;margin-bottom:14px}
+.card .txt{font-family:Georgia,"Times New Roman",serif;line-height:1.38;margin:0;text-shadow:0 1px 8px rgba(0,0,0,.2);font-size:clamp(20px,5.6vw,27px)}
+.card .txt.m{font-size:clamp(18px,5vw,23px)}
+.card .txt.l{font-size:clamp(16px,4.4vw,20px)}
+.card .ref{margin-top:18px;font-weight:700;font-size:17px;opacity:.95}
+.rail{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 110px);display:flex;flex-direction:column;gap:20px;align-items:center}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700}
+.rail .ic{width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;font-size:26px;transition:transform .15s}
+.rail button:active .ic{transform:scale(.88)}
+.rail .liked .ic{background:#fff;color:#e11d48}
+.readbtn{position:absolute;left:24px;right:90px;bottom:calc(env(safe-area-inset-bottom) + 28px);height:54px;border-radius:99px;background:#fff;color:#1a1033;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 24px rgba(0,0,0,.28)}
+.readbtn:active{transform:scale(.97)}
+.pop{position:absolute;left:50%;top:50%;font-size:120px;transform:translate(-50%,-50%) scale(0);pointer-events:none;animation:pop .7s ease-out forwards;filter:drop-shadow(0 4px 16px rgba(0,0,0,.35))}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(0);opacity:1}35%{transform:translate(-50%,-50%) scale(1.25);opacity:1}100%{transform:translate(-50%,-80%) scale(1);opacity:0}}
+#top{position:fixed;left:0;right:0;top:0;z-index:5;padding:calc(env(safe-area-inset-top) + 10px) 0 10px;background:linear-gradient(rgba(0,0,0,.35),transparent);pointer-events:none}
+#chips{display:flex;gap:8px;overflow-x:auto;padding:0 14px;scrollbar-width:none;pointer-events:auto}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 14px;border-radius:99px;background:rgba(0,0,0,.3);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-weight:700;font-size:14px;border:1.5px solid transparent}
+.chip.on{background:#fff;color:#1a1033}
+#hint{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 92px);text-align:center;font-weight:700;font-size:14px;z-index:4;pointer-events:none;animation:bob 1.4s ease-in-out infinite;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+@keyframes bob{50%{transform:translateY(-8px)}}
+#empty{position:fixed;inset:0;display:none;place-items:center;text-align:center;padding:40px;font-size:18px;line-height:1.5;z-index:3}
+#sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5);display:none}
+#sheet.open{display:block}
+#panel{position:absolute;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top) + 34px);background:#fffaf2;color:#2b2118;border-radius:22px 22px 0 0;display:flex;flex-direction:column;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(100%)}}
+#ph{display:flex;align-items:center;gap:8px;padding:12px 12px 10px 18px;border-bottom:1px solid #eadfcc}
+#ph h2{flex:1;margin:0;font-size:19px}
+#ph button{width:44px;height:44px;border-radius:50%;background:#f1e6d3;font-size:20px;color:#2b2118}
+#pb{flex:1;overflow-y:auto;padding:16px 22px 30px;font-family:Georgia,"Times New Roman",serif;font-size:19px;line-height:1.55;-webkit-user-select:text;user-select:text}
+#pb p{margin:0 0 10px}
+#pb sup{font-family:system-ui,sans-serif;font-size:11px;font-weight:700;color:#a8744a;margin-right:4px}
+#pb .hl{background:#ffe08a;border-radius:6px;padding:2px 4px;margin-left:-4px}
+#pn{display:flex;gap:10px;padding:10px 14px calc(env(safe-area-inset-bottom) + 12px);border-top:1px solid #eadfcc}
+#pn button{flex:1;height:50px;border-radius:14px;background:#f1e6d3;font-weight:700;font-size:16px;color:#2b2118}
+#pn button:disabled{opacity:.35}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 100px);transform:translateX(-50%);background:#fff;color:#1a1033;padding:10px 18px;border-radius:99px;font-weight:700;z-index:30;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.show{opacity:1}
+@media (min-width:700px){
+ .card{padding-left:calc(50vw - 300px);padding-right:calc(50vw - 230px)}
+ .readbtn{left:calc(50vw - 276px);right:auto;width:300px}
+ .rail{right:calc(50vw - 330px)}
+}
+@media (prefers-color-scheme:dark){
+ #panel{background:#1f1a2b;color:#f1e9ff}
+ #ph{border-color:#3a3150}#ph button,#pn button{background:#352c49;color:#f1e9ff}#pn{border-color:#3a3150}
+ #pb sup{color:#d9a679}#pb .hl{background:#5b4a1e}
+}
+</style>
+</head>
+<body>
+<div id="top"><div id="chips"></div></div>
+<div id="feed"></div>
+<div id="empty">Noch nichts gemerkt.<br>Doppeltippe auf einen Vers oder tippe auf das Herz ❤️</div>
+<div id="hint">Nach oben wischen ☝️</div>
+<div id="sheet"><div id="panel">
+  <div id="ph"><h2 id="pt"></h2><button id="px" aria-label="Schließen">✕</button></div>
+  <div id="pb"></div>
+  <div id="pn"><button id="pprev">← Zurück</button><button id="pnext">Weiter →</button></div>
+</div></div>
+<div id="toast"></div>
+<script src="data.js"></script>
+<script>
+(function(){
+var THEMES={
+ "Mut":{g:["#f97316","#be123c"],e:"🔥"},
+ "Trost":{g:["#0ea5e9","#4338ca"],e:"🤗"},
+ "Sorgen":{g:["#7c3aed","#1e3a8a"],e:"🧘"},
+ "Hoffnung":{g:["#16a34a","#0f766e"],e:"🌅"},
+ "Liebe":{g:["#ec4899","#9f1239"],e:"❤️"},
+ "Weisheit":{g:["#b45309","#44403c"],e:"🦉"},
+ "Dank":{g:["#eab308","#c2410c"],e:"🙌"},
+ "Humor":{g:["#f43f5e","#a21caf"],e:"😄"}
+};
+var ORDERT=["Alle","Mut","Trost","Sorgen","Hoffnung","Liebe","Weisheit","Dank","Humor","Gemerkt"];
+var F=window.FEED.map(function(a,i){return {i:i,b:a[0],c:a[1],v1:a[2],v2:a[3],th:a[4],h:a[5],t:a[6]};});
+var feed=document.getElementById("feed"),chips=document.getElementById("chips");
+var cur="Alle",likes={},queue=[],last=-1;
+function safe(f,d){try{return f()}catch(e){return d}}
+likes=safe(function(){return JSON.parse(localStorage.getItem("bs_likes")||"{}")},{});
+function saveLikes(){safe(function(){localStorage.setItem("bs_likes",JSON.stringify(likes))})}
+function ref(x){return window.BOOKS[x.b]+" "+(x.c+1)+","+x.v1+(x.v2!==x.v1?"-"+x.v2:"")}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function pool(){return F.filter(function(x){return cur==="Alle"||(cur==="Gemerkt"?likes[x.i]:x.th===cur)})}
+function next(n){
+  var p=pool();if(!p.length)return [];
+  var out=[];
+  while(out.length<n){
+    if(!queue.length){queue=shuffle(p);if(queue.length>1&&queue[0].i===last){queue.push(queue.shift())}}
+    var x=queue.shift();out.push(x);last=x.i;
+  }
+  return out;
+}
+function emojiOf(h,th){var m=h.match(/[☀-➿]|[\ud83c-\ud83e][\udc00-\udfff]/g);return m?m[0]:THEMES[th].e}
+function sizeCls(t){return t.length>230?"l":(t.length>120?"m":"")}
+function card(x){
+  var d=document.createElement("section");d.className="card";d.dataset.i=x.i;
+  var g=THEMES[x.th].g,ang=120+(x.i*37)%90;
+  d.style.background="linear-gradient("+ang+"deg,"+g[0]+","+g[1]+")";
+  var liked=!!likes[x.i];
+  d.innerHTML='<div class="bgemoji"></div><span class="tag"></span><h1 class="head"></h1><p class="txt '+sizeCls(x.t)+'"></p><div class="ref"></div>'+
+   '<div class="rail"><button class="lk'+(liked?' liked':'')+'" aria-label="Merken"><span class="ic">'+(liked?'❤️':'🤍')+'</span><span>Merken</span></button><button class="sh" aria-label="Teilen"><span class="ic">📤</span><span>Teilen</span></button></div>'+
+   '<button class="readbtn">📖 Genauer lesen</button>';
+  d.querySelector(".bgemoji").textContent=emojiOf(x.h,x.th);
+  d.querySelector(".tag").textContent=x.th;
+  d.querySelector(".head").textContent=x.h;
+  d.querySelector(".txt").textContent="„"+x.t+"“";
+  d.querySelector(".ref").textContent=ref(x)+" · Luther 1912";
+  d.querySelector(".lk").onclick=function(e){e.stopPropagation();toggle(x,d)};
+  d.querySelector(".sh").onclick=function(e){e.stopPropagation();share(x)};
+  d.querySelector(".readbtn").onclick=function(e){e.stopPropagation();openReader(x.b,x.c,x.v1,x.v2)};
+  var lastTap=0;
+  d.addEventListener("click",function(e){
+    var n=Date.now();
+    if(n-lastTap<320){lastTap=0;if(!likes[x.i])toggle(x,d);else burst(d)}else lastTap=n;
+  });
+  return d;
+}
+function burst(d){var p=document.createElement("div");p.className="pop";p.textContent="❤️";d.appendChild(p);setTimeout(function(){p.remove()},750)}
+function toggle(x,d){
+  if(likes[x.i]){delete likes[x.i]}else{likes[x.i]=1;burst(d)}
+  saveLikes();
+  var on=!!likes[x.i],b=d.querySelector(".lk");
+  b.classList.toggle("liked",on);b.querySelector(".ic").textContent=on?"❤️":"🤍";
+}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove("show")},1600)}
+function share(x){
+  var s="„"+x.t+"“\n— "+ref(x)+" (Luther 1912)\n\nBibel-Scroll: "+location.href.split("#")[0];
+  if(navigator.share){navigator.share({text:s}).catch(function(){})}
+  else if(navigator.clipboard){navigator.clipboard.writeText(s).then(function(){toast("Kopiert 📋")},function(){toast("Teilen nicht möglich")})}
+  else toast("Teilen nicht möglich");
+}
+function fill(n){
+  if(cur==="Gemerkt"){if(feed.children.length)return;queue=[];n=pool().length}
+  var a=next(n);a.forEach(function(x){feed.appendChild(card(x))});document.getElementById("empty").style.display=pool().length?"none":"grid"}
+function watch(){}
+setInterval(function(){topUp()},400);
+function topUp(){if(cur!=="Gemerkt"&&feed.scrollTop+feed.clientHeight*4>feed.scrollHeight)fill(12)}
+var hint=document.getElementById("hint");
+feed.addEventListener("scroll",function(){topUp();if(feed.scrollTop>40&&hint){hint.remove();hint=null}},{passive:true});
+function setCat(c){
+  cur=c;queue=[];last=-1;feed.innerHTML="";feed.scrollTop=0;
+  Array.prototype.forEach.call(chips.children,function(b){b.classList.toggle("on",b.dataset.c===c)});
+  fill(14);watch();
+  safe(function(){localStorage.setItem("bs_cat",c)});
+}
+ORDERT.forEach(function(c){
+  var b=document.createElement("button");b.className="chip";b.dataset.c=c;
+  b.textContent=c==="Alle"?"✨ Alle":c==="Gemerkt"?"❤️ Gemerkt":c;
+  b.onclick=function(){setCat(c)};chips.appendChild(b);
+});
+// Leser
+var sheet=document.getElementById("sheet"),pb=document.getElementById("pb"),pt=document.getElementById("pt");
+var rb=0,rc=0;
+function chapters(b){return window.LUT[b].length}
+function renderChap(hl1,hl2){
+  var ch=window.LUT[rb][rc];pt.textContent=window.BOOKS[rb]+" "+(rc+1);
+  var h="";
+  ch.forEach(function(t,i){
+    var n=i+1,on=hl1&&n>=hl1&&n<=hl2;
+    if(!t)return;
+    h+='<p'+(on?' class="hl" id="hl'+(n===hl1?'f':'')+'"':'')+'><sup>'+n+'</sup>'+t.replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</p>';
+  });
+  pb.innerHTML=h;
+  var f=pb.querySelector("#hlf");if(f)f.scrollIntoView({block:"center"});else pb.scrollTop=0;
+  document.getElementById("pprev").disabled=(rb===0&&rc===0);
+  document.getElementById("pnext").disabled=(rb===window.LUT.length-1&&rc===chapters(rb)-1);
+}
+function openReader(b,c,v1,v2){rb=b;rc=c;sheet.classList.add("open");renderChap(v1,v2);try{history.pushState({r:1},"")}catch(e){}}
+function closeReader(){sheet.classList.remove("open")}
+document.getElementById("px").onclick=function(){closeReader();try{if(history.state&&history.state.r)history.back()}catch(e){}};
+sheet.addEventListener("click",function(e){if(e.target===sheet)document.getElementById("px").onclick()});
+window.addEventListener("popstate",closeReader);
+document.getElementById("pprev").onclick=function(){
+  if(rc>0)rc--;else if(rb>0){rb--;rc=chapters(rb)-1}renderChap()};
+document.getElementById("pnext").onclick=function(){
+  if(rc<chapters(rb)-1)rc++;else if(rb<window.LUT.length-1){rb++;rc=0}renderChap()};
+// Tastatur
+document.addEventListener("keydown",function(e){
+  if(sheet.classList.contains("open")){if(e.key==="Escape")document.getElementById("px").onclick();return}
+  var h=feed.clientHeight;
+  if(e.key==="ArrowDown"||e.key==="PageDown"||e.key===" "){feed.scrollBy({top:h,behavior:"smooth"});e.preventDefault()}
+  if(e.key==="ArrowUp"||e.key==="PageUp"){feed.scrollBy({top:-h,behavior:"smooth"});e.preventDefault()}
+});
+// iOS: kein Zoomen
+["gesturestart","gesturechange"].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault()})});
+var c0=safe(function(){return localStorage.getItem("bs_cat")},"Alle");
+if(ORDERT.indexOf(c0)<0||(c0==="Gemerkt"&&!Object.keys(likes).length))c0="Alle";
+setCat(c0);
+if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)navigator.serviceWorker.register("sw.js").catch(function(){});
+})();
+</script>
+</body>
+</html>
